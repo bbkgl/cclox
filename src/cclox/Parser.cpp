@@ -1,3 +1,4 @@
+#include <charconv>
 #include "Parser.h"
 #include "Ast.h"
 
@@ -18,6 +19,7 @@ namespace cclox {
         InfixParseFn lambdaBinary = [&parser](ASTRef left) { return parser->Binary(std::move(left)); };
         PrefixParseFn lambdaUnary = [&parser]() { return parser->Unary(); };
         PrefixParseFn lambdaNumber = [&parser]() { return parser->Number(); };
+        PrefixParseFn lambdaLiteral = [&parser]() { return parser->Literal(); };
 
         Parser::StaticParseRules[TOKEN_LEFT_PAREN]    = {lambdaGrouping, nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_RIGHT_PAREN]   = {nullptr,     nullptr,   PREC_NONE};
@@ -30,31 +32,31 @@ namespace cclox {
         Parser::StaticParseRules[TOKEN_SEMICOLON]     = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_SLASH]         = {nullptr,     lambdaBinary, PREC_FACTOR};
         Parser::StaticParseRules[TOKEN_STAR]          = {nullptr,     lambdaBinary, PREC_FACTOR};
-        Parser::StaticParseRules[TOKEN_BANG]          = {nullptr,     nullptr,   PREC_NONE};
-        Parser::StaticParseRules[TOKEN_BANG_EQUAL]    = {nullptr,     nullptr,   PREC_NONE};
+        Parser::StaticParseRules[TOKEN_BANG]          = {lambdaUnary,     nullptr,   PREC_NONE};
+        Parser::StaticParseRules[TOKEN_BANG_EQUAL]    = {nullptr,     lambdaBinary,   PREC_EQUALITY};
         Parser::StaticParseRules[TOKEN_EQUAL]         = {nullptr,     nullptr,   PREC_NONE};
-        Parser::StaticParseRules[TOKEN_EQUAL_EQUAL]   = {nullptr,     nullptr,   PREC_NONE};
-        Parser::StaticParseRules[TOKEN_GREATER]       = {nullptr,     nullptr,   PREC_NONE};
-        Parser::StaticParseRules[TOKEN_GREATER_EQUAL] = {nullptr,     nullptr,   PREC_NONE};
-        Parser::StaticParseRules[TOKEN_LESS]          = {nullptr,     nullptr,   PREC_NONE};
-        Parser::StaticParseRules[TOKEN_LESS_EQUAL]    = {nullptr,     nullptr,   PREC_NONE};
+        Parser::StaticParseRules[TOKEN_EQUAL_EQUAL]   = {nullptr,     lambdaBinary,   PREC_EQUALITY};
+        Parser::StaticParseRules[TOKEN_GREATER]       = {nullptr,     lambdaBinary,   PREC_COMPARISON};
+        Parser::StaticParseRules[TOKEN_GREATER_EQUAL] = {nullptr,     lambdaBinary,   PREC_COMPARISON};
+        Parser::StaticParseRules[TOKEN_LESS]          = {nullptr,     lambdaBinary,   PREC_COMPARISON};
+        Parser::StaticParseRules[TOKEN_LESS_EQUAL]    = {nullptr,     lambdaBinary,   PREC_COMPARISON};
         Parser::StaticParseRules[TOKEN_IDENTIFIER]    = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_STRING]        = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_NUMBER]        = {lambdaNumber,   nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_AND]           = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_CLASS]         = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_ELSE]          = {nullptr,     nullptr,   PREC_NONE};
-        Parser::StaticParseRules[TOKEN_FALSE]         = {nullptr,     nullptr,   PREC_NONE};
+        Parser::StaticParseRules[TOKEN_FALSE]         = {lambdaLiteral,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_FOR]           = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_FUN]           = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_IF]            = {nullptr,     nullptr,   PREC_NONE};
-        Parser::StaticParseRules[TOKEN_NIL]           = {nullptr,     nullptr,   PREC_NONE};
+        Parser::StaticParseRules[TOKEN_NIL]           = {lambdaLiteral,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_OR]            = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_PRINT]         = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_RETURN]        = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_SUPER]         = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_THIS]          = {nullptr,     nullptr,   PREC_NONE};
-        Parser::StaticParseRules[TOKEN_TRUE]          = {nullptr,     nullptr,   PREC_NONE};
+        Parser::StaticParseRules[TOKEN_TRUE]          = {lambdaLiteral,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_VAR]           = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_WHILE]         = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_ERROR]         = {nullptr,     nullptr,   PREC_NONE};
@@ -72,15 +74,15 @@ namespace cclox {
         }
     }
 
-    void Parser::ErrorAtCurrent(const char* message) {
+    void Parser::ErrorAtCurrent(std::string_view message) {
         ErrorAt(_currentToken, message);
     }
 
-    void Parser::ErrorAtLast(const char* message) {
+    void Parser::ErrorAtLast(std::string_view message) {
         ErrorAt(_previousToken, message);
     }
 
-    void Parser::ErrorAt(Token &token, const char *message) {
+    void Parser::ErrorAt(Token &token, std::string_view message) {
         if (_panicMode)
             return ;
         _panicMode = true;
@@ -94,11 +96,11 @@ namespace cclox {
             fprintf(stderr, " at '%.*s'", token._length, token._start);
         }
 
-        fprintf(stderr, ": %s\n", message);
+        fprintf(stderr, ": %s\n", message.data());
         _hadError = true;
     }
 
-    void Parser::Consume(TokenType expected, const char* message) {
+    void Parser::Consume(TokenType expected, std::string_view message) {
         if (expected == _currentToken._type) {
             Advance();
             return ;
@@ -135,8 +137,9 @@ namespace cclox {
     }
 
     ASTRef Parser::Number() {
-        Value value = std::strtod(_previousToken._start, nullptr);
-        ASTRef numberAst = std::make_unique<NumberExprAst>(_previousToken, value);
+        const char* str = _previousToken._start;
+        cclox::Number value = std::strtod(str, nullptr);
+        ASTRef numberAst = std::make_unique<NumberExprAst>(_previousToken, NUMBER_VAL(value));
         return std::move(numberAst);
     }
 
@@ -160,5 +163,10 @@ namespace cclox {
         binAst->_lhs = std::move(left);
         binAst->_rhs = ParsePrecedence((Precedence)(rule->_precedence + 1));
         return binAst;
+    }
+
+    ASTRef Parser::Literal() {
+        auto literalAst = std::make_unique<LiteralExprAst>(_previousToken);
+        return literalAst;
     }
 }

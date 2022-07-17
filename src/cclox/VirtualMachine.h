@@ -4,6 +4,8 @@
 #include <stack>
 #include <string>
 #include <memory>
+#include <string_view>
+#include "Utils.h"
 #include "Chunk.h"
 #include "Value.h"
 
@@ -20,7 +22,7 @@ namespace cclox {
     public:
         explicit VirtualMachine();
 
-        InterpretResult Interpret(std::unique_ptr<Chunk> chunk);
+        InterpretResult Interpret(std::unique_ptr<Chunk>&& chunk);
         InterpretResult Interpret(const std::string& source);
     private:
         typedef std::vector<Value> ValueStack;
@@ -37,10 +39,25 @@ namespace cclox {
 
         void BinaryOperation(OpCode binaryOperator);
 
+        template <typename T>
+        void PushSpecific(T value) {
+            Push(VAL_VAL(value));
+        }
+
         void Push(Value value);
         Value Pop();
-
         void NegateOperation();
+
+        void ErrorAtLatest();
+
+        template<typename ... Args>
+        void RuntimeError(std::string_view format, Args... args) {
+            std::string&& errorMsg = string_format(format, args...);
+            fprintf(stderr, "%s\n", errorMsg.c_str());
+
+            ErrorAtLatest();
+            _valueStack.clear();
+        }
 
         //
         std::unique_ptr<Chunk> _currentChunk;

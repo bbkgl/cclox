@@ -39,20 +39,22 @@ namespace cclox {
             printf("%4d ", lines[offset]);
 
         switch (instruction) {
-            case OP_RETURN:
-                return SimpleInstruction("OP_RETURN", offset);
             case OP_CONSTANT:
                 return ConstantInstruction("OP_CONSTANT", offset, code, constants);
+            case OP_FALSE:
+            case OP_TRUE:
+            case OP_NIL:
+            case OP_RETURN:
+            case OP_NOT:
             case OP_NEGATE:
-                return SimpleInstruction("OP_NEGATE", offset);
             case OP_ADD:
-                return SimpleInstruction("OP_ADD", offset);
             case OP_SUBTRACT:
-                return SimpleInstruction("OP_SUBTRACT", offset);
             case OP_MULTIPLY:
-                return SimpleInstruction("OP_MULTIPLY", offset);
+            case OP_EQUAL:
+            case OP_LESS:
+            case OP_GREATER:
             case OP_DIVIDE:
-                return SimpleInstruction("OP_DIVIDE", offset);
+                return SimpleInstruction(GetOpTypeStr(static_cast<OpCode>(instruction)), offset);
             default:
                 printf("Unknown opcode %d\n", instruction);
                 return offset + 1;

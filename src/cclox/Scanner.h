@@ -9,7 +9,7 @@
 namespace cclox{
     class Scanner {
     public:
-        explicit Scanner(const std::string& source);
+        explicit Scanner(std::string_view source);
 
         Token GetNextToken();
         int GetLineNumber() const { return _currentLine; }
@@ -29,7 +29,7 @@ namespace cclox{
         Token DetermineIdentifyType();
         Token TryMakeKeyword(int restStart, int length, const char* rest, TokenType type) const;
 
-        std::string _source;
+        std::string_view   _source;
         std::vector<Token> _tokens;
 
         int    _startPos;

@@ -2,18 +2,16 @@
 #define CCLOX_COMPILER_H
 
 #include <memory>
+#include <string_view>
 #include "Chunk.h"
 #include "Parser.h"
 
 namespace cclox {
-    class Chunk;
-    class Scanner;
-
     class Compiler {
     public:
         static Compiler& Get();
 
-        std::unique_ptr<Chunk> Compile(const std::string& source);
+        std::unique_ptr<Chunk> Compile(std::string_view source);
 
         void CodeGen(ASTRef& root);
         void EndCompile();

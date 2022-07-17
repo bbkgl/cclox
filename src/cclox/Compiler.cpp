@@ -11,7 +11,7 @@ namespace cclox {
     {
     }
 
-    std::unique_ptr<Chunk> Compiler::Compile(const std::string &source) {
+    std::unique_ptr<Chunk> Compiler::Compile(std::string_view source) {
         auto scanner = std::make_unique<Scanner>(source);
         _currentParser = std::make_unique<Parser>(std::move(scanner));
         RegisterRules();

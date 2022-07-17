@@ -60,8 +60,7 @@ namespace cclox {
     DEF_TOKEN(TOKEN_EOF)  \
     DEF_TOKEN(TOKEN_MAXNUM)  \
 
-
-    enum TokenType : uint32 {
+    enum TokenType : uint8 {
 #define DEF_TOKEN(TOKEN_TYPE) TOKEN_TYPE,
         TOKEN_TABLE()
 #undef DEF_TOKEN
@@ -78,15 +77,39 @@ namespace cclox {
         return nullptr;
     }
 
-    typedef enum {
-        OP_CONSTANT,
-        OP_ADD,
-        OP_SUBTRACT,
-        OP_MULTIPLY,
-        OP_DIVIDE,
-        OP_NEGATE,
-        OP_RETURN
+
+#define OP_T_TABLE() \
+    DEF_OP(OP_CONSTANT) \
+    DEF_OP(OP_NIL) \
+    DEF_OP(OP_TRUE) \
+    DEF_OP(OP_FALSE) \
+    DEF_OP(OP_ADD) \
+    DEF_OP(OP_SUBTRACT) \
+    DEF_OP(OP_MULTIPLY) \
+    DEF_OP(OP_DIVIDE)\
+    DEF_OP(OP_EQUAL)\
+    DEF_OP(OP_GREATER)\
+    DEF_OP(OP_LESS)\
+    DEF_OP(OP_NOT) \
+    DEF_OP(OP_NEGATE) \
+    DEF_OP(OP_RETURN) \
+
+    typedef enum OPType : uint8 {
+#define DEF_OP(OP_TYPE) OP_TYPE,
+        OP_T_TABLE()
+#undef DEF_OP
     } OpCode;
+
+    inline const char* GetOpTypeStr(OpCode op)
+    {
+        switch (op) {
+#define DEF_OP(OP_TYPE) case OP_TYPE: \
+                            return #OP_TYPE;
+            OP_T_TABLE()
+#undef DEF_OP
+        }
+        return nullptr;
+    }
 }
 
 #endif //CCLOX_COMMON_H

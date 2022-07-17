@@ -18,6 +18,8 @@ namespace cclox {
         Chunk(Chunk&& inChunk);
 
         void WriteChunk(const uint8 byte, uint32 line);
+
+
         ConstantIndex AddConstant(Value value);
 
         CodeArray GetChunkCodes() const {

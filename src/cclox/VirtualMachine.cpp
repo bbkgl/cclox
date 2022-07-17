@@ -11,7 +11,10 @@ namespace cclox {
 
     }
 
-    InterpretResult VirtualMachine::Interpret(std::unique_ptr<Chunk> chunk) {
+    InterpretResult VirtualMachine::Interpret(std::unique_ptr<Chunk>&& chunk) {
+        if (!chunk)
+            return INTERPRET_COMPILE_ERROR;
+
         _currentChunk = std::move(chunk);
         _ip = _currentChunk->GetCodePointer();
         _valueStack.clear();
@@ -40,10 +43,35 @@ namespace cclox {
                     Push(constant);
                     break;
                 }
+                case OP_FALSE: {
+                    PushSpecific(false);
+                    break;
+                }
+                case OP_TRUE: {
+                    PushSpecific(true);
+                    break;
+                }
+                case OP_NIL: {
+                    PushSpecific(nullptr);
+                    break;
+                }
+                case OP_NOT: {
+                    Value& topValue = _valueStack.back();
+                    topValue = VAL_VAL(!AS_BOOL(topValue));
+                    break;
+                }
                 case OP_NEGATE: {
+                    if (!IS_NUMBER(_valueStack.back()))
+                    {
+                        RuntimeError("Operand must be a number, but %s!", GetValueTypeStr(_valueStack.back().type));
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
                     NegateOperation();
                     break;
                 }
+                case OP_EQUAL:
+                case OP_LESS:
+                case OP_GREATER:
                 case OP_MULTIPLY:
                 case OP_ADD:
                 case OP_SUBTRACT:
@@ -84,13 +112,19 @@ namespace cclox {
         Value left = Pop();
         switch (binOperator) {
             case OP_ADD:
-                return Push(left + right);
+                return PushSpecific(left + right);
             case OP_SUBTRACT:
-                return Push(left - right);
+                return PushSpecific(left - right);
             case OP_DIVIDE:
-                return Push(left / right);
+                return PushSpecific(left / right);
             case OP_MULTIPLY:
-                return Push(left * right);
+                return PushSpecific(left * right);
+            case OP_EQUAL:
+                return PushSpecific(left == right);
+            case OP_LESS:
+                return PushSpecific(left < right);
+            case OP_GREATER:
+                return PushSpecific(left > right);
             default:
                 fprintf(stderr, "The operator %d not supported!", binOperator);
                 return ;
@@ -98,8 +132,7 @@ namespace cclox {
     }
 
     void VirtualMachine::NegateOperation() {
-//        Push(-Pop());
-        _valueStack.back() = -_valueStack.back();
+        AS_NUMBER(_valueStack.back()) = -AS_NUMBER(_valueStack.back());
     }
 
     InterpretResult VirtualMachine::Interpret(const std::string &source) {
@@ -107,6 +140,12 @@ namespace cclox {
         _currentChunk = std::move(compiledChunk);
         InterpretResult result = Interpret(std::move(_currentChunk));
         return result;
+    }
+
+    void VirtualMachine::ErrorAtLatest() {
+        size_t preInstructionLineIndex = GetPCOffset() - 1;
+        int line = _currentChunk->GetLines()[preInstructionLineIndex];
+        fprintf(stderr, "[line %d] in script\n", line);
     }
 }
 cclox::VirtualMachine *cclox::GlobalVM = &cclox::StaticVM;

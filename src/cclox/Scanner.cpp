@@ -7,7 +7,7 @@
 #include "Scanner.h"
 
 namespace cclox {
-    Scanner::Scanner(const std::string& source)
+    Scanner::Scanner(std::string_view source)
     : _source(source)
     , _currentLine(1)
     , _currentPos(0)
@@ -201,13 +201,14 @@ namespace cclox {
             default:
                 return MakeToken(TOKEN_IDENTIFIER);
         }
+        return MakeError();
     }
 
     Token Scanner::TryMakeKeyword(int restStart, int restLength, const char *rest, TokenType type) const {
         RUNTIME_ASSERT(restLength == std::strlen(rest));
 
         if (_currentPos - _startPos == restStart + restLength) {
-            if (std::memcmp(rest, _source.data() + restStart, restLength) == 0)
+            if (std::memcmp(rest, _source.data() + _startPos + restStart, restLength) == 0)
                 return MakeToken(type);
         }
         return MakeToken(TOKEN_IDENTIFIER);

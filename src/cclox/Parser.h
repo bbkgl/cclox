@@ -37,7 +37,7 @@ namespace cclox {
         explicit Parser(std::unique_ptr<Scanner> scanner);
 
         void Advance();
-        void Consume(TokenType expected, const char* message);
+        void Consume(TokenType expected, std::string_view message);
         static void RegisterRules(std::unique_ptr<Parser>& parser);
 
         Token GetPreviousToken() const { return _previousToken; }
@@ -51,9 +51,9 @@ namespace cclox {
 
         ASTRef ParsePrecedence(Precedence precedence);
     private:
-        void ErrorAtCurrent(const char* message);
-        void ErrorAtLast(const char* message);
-        void ErrorAt(Token& token, const char* message);
+        void ErrorAtCurrent(std::string_view message);
+        void ErrorAtLast(std::string_view message);
+        void ErrorAt(Token& token, std::string_view message);
 
         // infix && prefix function
         ASTRef Expression();
@@ -61,6 +61,7 @@ namespace cclox {
         ASTRef Unary();
         ASTRef Group();
         ASTRef Binary(ASTRef left);
+        ASTRef Literal();
 
         Token _currentToken;
         Token _previousToken;
