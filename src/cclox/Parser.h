@@ -6,6 +6,7 @@
 #include "Common.h"
 #include "Token.h"
 #include "Scanner.h"
+#include "Ast.h"
 
 namespace cclox {
     typedef enum {
@@ -22,10 +23,12 @@ namespace cclox {
         PREC_PRIMARY
     } Precedence;
 
-    typedef std::function<void()> ParseFn;
+    typedef std::unique_ptr<Ast> ASTRef;
+    typedef std::function<ASTRef ()> PrefixParseFn;
+    typedef std::function<ASTRef (ASTRef left)> InfixParseFn;
     typedef struct {
-        ParseFn _prefixFn;
-        ParseFn _infixFn;
+        PrefixParseFn _prefixFn;
+        InfixParseFn _infixFn;
         Precedence _precedence;
     } ParseRule;
 
@@ -35,6 +38,7 @@ namespace cclox {
 
         void Advance();
         void Consume(TokenType expected, const char* message);
+        static void RegisterRules(std::unique_ptr<Parser>& parser);
 
         Token GetPreviousToken() const { return _previousToken; }
         Token GetCurrentToken() const { return _currentToken; }
@@ -45,11 +49,18 @@ namespace cclox {
         ParseRule* GetRule(TokenType type);
 
 
-        void ParsePrecedence(Precedence precedence);
+        ASTRef ParsePrecedence(Precedence precedence);
     private:
         void ErrorAtCurrent(const char* message);
         void ErrorAtLast(const char* message);
         void ErrorAt(Token& token, const char* message);
+
+        // infix && prefix function
+        ASTRef Expression();
+        ASTRef Number();
+        ASTRef Unary();
+        ASTRef Group();
+        ASTRef Binary(ASTRef left);
 
         Token _currentToken;
         Token _previousToken;

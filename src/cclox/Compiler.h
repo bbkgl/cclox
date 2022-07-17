@@ -14,23 +14,20 @@ namespace cclox {
         static Compiler& Get();
 
         std::unique_ptr<Chunk> Compile(const std::string& source);
+
+        void CodeGen(ASTRef& root);
         void EndCompile();
     private:
         explicit Compiler();
         void RegisterRules();
 
+        void PostDFSCodeGen(ASTRef& root);
+
         void EmitByte(uint8 byte);
-        void EmitBytes(uint8 byte1, uint8 byte2);
-        void EmitConstant(Value value);
         void EmitReturn();
 
-        Chunk::ConstantIndex MakeConstant(Value value);
-
-        void MakeNumber();
-        void MakeUnary();
-        void MakeBinary();
-        void Expression();
-        void Grouping();
+        ASTRef PerformParseAst();
+        ASTRef Expression();
 
         std::unique_ptr<Chunk> _currentCompilingChunk;
         std::unique_ptr<Parser> _currentParser;
