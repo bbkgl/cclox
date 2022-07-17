@@ -13,7 +13,7 @@ namespace cclox {
             return "";
         std::unique_ptr<char[]> buf(new char[size]);
         std::snprintf(buf.get(), size, format.data(), args ...);
-        return std::string(buf.get(), buf.get() + size - 1);
+        return std::string{buf.get(), buf.get() + size - 1};
     }
 }
 

@@ -1,5 +1,6 @@
 #include "Common.h"
 #include "VirtualMachine.h"
+#include "Chunk.h"
 #include "Debug.h"
 #include "Compiler.h"
 
@@ -144,7 +145,8 @@ namespace cclox {
 
     void VirtualMachine::ErrorAtLatest() {
         size_t preInstructionLineIndex = GetPCOffset() - 1;
-        int line = _currentChunk->GetLines()[preInstructionLineIndex];
+        const auto& lines = _currentChunk->GetLines();
+        uint32 line = lines[preInstructionLineIndex];
         fprintf(stderr, "[line %d] in script\n", line);
     }
 }

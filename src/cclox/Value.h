@@ -33,7 +33,7 @@ namespace cclox {
 
     typedef double Number;
 
-    typedef struct {
+    typedef struct Value {
         ValueType type;
 
         union {

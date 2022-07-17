@@ -3,29 +3,32 @@
 
 #include <memory>
 #include <string_view>
-#include "Chunk.h"
-#include "Parser.h"
 
 namespace cclox {
+    class Chunk;
+    class Ast;
+    class Parser;
+
+    typedef std::unique_ptr<Ast> ASTUniquePtr;
     class Compiler {
     public:
         static Compiler& Get();
 
         std::unique_ptr<Chunk> Compile(std::string_view source);
 
-        void CodeGen(ASTRef& root);
+        void CodeGen(ASTUniquePtr& root);
         void EndCompile();
     private:
         explicit Compiler();
         void RegisterRules();
 
-        void PostDFSCodeGen(ASTRef& root);
+        void PostDFSCodeGen(ASTUniquePtr& root);
 
         void EmitByte(uint8 byte);
         void EmitReturn();
 
-        ASTRef PerformParseAst();
-        ASTRef Expression();
+        ASTUniquePtr PerformParseAst();
+        ASTUniquePtr Expression();
 
         std::unique_ptr<Chunk> _currentCompilingChunk;
         std::unique_ptr<Parser> _currentParser;

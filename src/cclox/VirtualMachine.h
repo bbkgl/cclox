@@ -5,9 +5,9 @@
 #include <string>
 #include <memory>
 #include <string_view>
-#include "Utils.h"
-#include "Chunk.h"
+#include <vector>
 #include "Value.h"
+#include "Utils.h"
 
 namespace cclox {
     typedef enum {
@@ -27,6 +27,7 @@ namespace cclox {
     private:
         typedef std::vector<Value> ValueStack;
 
+        // ------------------------------------Methods------------------------------------
         InterpretResult Run();
 
         size_t GetPCOffset();
@@ -59,7 +60,7 @@ namespace cclox {
             _valueStack.clear();
         }
 
-        //
+        // ------------------------------------Properties------------------------------------
         std::unique_ptr<Chunk> _currentChunk;
         uint8* _ip;                   // offset in chunk op codes
 

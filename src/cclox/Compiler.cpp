@@ -1,5 +1,8 @@
 #include "Scanner.h"
 #include "Compiler.h"
+#include "Chunk.h"
+#include "Parser.h"
+#include "Ast.h"
 
 namespace cclox {
     Compiler& Compiler::Get() {
@@ -18,7 +21,7 @@ namespace cclox {
         _currentCompilingChunk = std::make_unique<Chunk>();
 
         _currentParser->Advance();
-        ASTRef ast = PerformParseAst();
+        ASTUniquePtr ast = PerformParseAst();
         CodeGen(ast);
 
         EndCompile();
@@ -41,12 +44,12 @@ namespace cclox {
         EmitReturn();
     }
 
-    ASTRef Compiler::PerformParseAst() {
+    ASTUniquePtr Compiler::PerformParseAst() {
         return Expression();
     }
 
-    ASTRef Compiler::Expression() {
-        ASTRef expressionAst = _currentParser->ParsePrecedence(PREC_ASSIGNMENT);
+    ASTUniquePtr Compiler::Expression() {
+        ASTUniquePtr expressionAst = _currentParser->ParsePrecedence(PREC_ASSIGNMENT);
         return expressionAst;
     }
 
@@ -54,11 +57,11 @@ namespace cclox {
         _currentParser->RegisterRules(_currentParser);
     }
 
-    void Compiler::CodeGen(ASTRef& root) {
+    void Compiler::CodeGen(ASTUniquePtr& root) {
         PostDFSCodeGen(root);
     }
 
-    void Compiler::PostDFSCodeGen(ASTRef& root) {
+    void Compiler::PostDFSCodeGen(ASTUniquePtr& root) {
         if (!root)
             return ;
         PostDFSCodeGen(root->_lhs);

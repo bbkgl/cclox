@@ -3,10 +3,8 @@
 
 #include <memory>
 #include <functional>
-#include "Common.h"
 #include "Token.h"
-#include "Scanner.h"
-#include "Ast.h"
+#include "Common.h"
 
 namespace cclox {
     typedef enum {
@@ -23,9 +21,12 @@ namespace cclox {
         PREC_PRIMARY
     } Precedence;
 
-    typedef std::unique_ptr<Ast> ASTRef;
-    typedef std::function<ASTRef ()> PrefixParseFn;
-    typedef std::function<ASTRef (ASTRef left)> InfixParseFn;
+    class Ast;
+    class Scanner;
+
+    typedef std::unique_ptr<Ast> ASTUniquePtr;
+    typedef std::function<ASTUniquePtr ()> PrefixParseFn;
+    typedef std::function<ASTUniquePtr (ASTUniquePtr left)> InfixParseFn;
     typedef struct {
         PrefixParseFn _prefixFn;
         InfixParseFn _infixFn;
@@ -46,22 +47,22 @@ namespace cclox {
         bool HadError() const { return _hadError; }
 
         static ParseRule StaticParseRules[TOKEN_MAXNUM];
-        ParseRule* GetRule(TokenType type);
+        static ParseRule* GetRule(TokenType type);
 
 
-        ASTRef ParsePrecedence(Precedence precedence);
+        ASTUniquePtr ParsePrecedence(Precedence precedence);
     private:
         void ErrorAtCurrent(std::string_view message);
         void ErrorAtLast(std::string_view message);
         void ErrorAt(Token& token, std::string_view message);
 
         // infix && prefix function
-        ASTRef Expression();
-        ASTRef Number();
-        ASTRef Unary();
-        ASTRef Group();
-        ASTRef Binary(ASTRef left);
-        ASTRef Literal();
+        ASTUniquePtr Expression();
+        ASTUniquePtr Number();
+        ASTUniquePtr Unary();
+        ASTUniquePtr Group();
+        ASTUniquePtr Binary(ASTUniquePtr left);
+        ASTUniquePtr Literal();
 
         Token _currentToken;
         Token _previousToken;

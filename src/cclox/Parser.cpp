@@ -1,4 +1,5 @@
 #include <charconv>
+#include "Scanner.h"
 #include "Parser.h"
 #include "Ast.h"
 
@@ -16,7 +17,7 @@ namespace cclox {
     void Parser::RegisterRules(std::unique_ptr<Parser>& parser)
     {
         PrefixParseFn lambdaGrouping = [&parser]() { return parser->Group(); };
-        InfixParseFn lambdaBinary = [&parser](ASTRef left) { return parser->Binary(std::move(left)); };
+        InfixParseFn lambdaBinary = [&parser](ASTUniquePtr left) { return parser->Binary(std::move(left)); };
         PrefixParseFn lambdaUnary = [&parser]() { return parser->Unary(); };
         PrefixParseFn lambdaNumber = [&parser]() { return parser->Number(); };
         PrefixParseFn lambdaLiteral = [&parser]() { return parser->Literal(); };
@@ -108,7 +109,7 @@ namespace cclox {
         ErrorAtCurrent(message);
     }
 
-    ASTRef Parser::ParsePrecedence(Precedence precedence) {
+    ASTUniquePtr Parser::ParsePrecedence(Precedence precedence) {
         Advance();
 
         const PrefixParseFn & prefixRule = GetRule(_previousToken._type)->_prefixFn;
@@ -118,7 +119,7 @@ namespace cclox {
             return nullptr;
         }
 
-        ASTRef left = prefixRule();
+        ASTUniquePtr left = prefixRule();
 
         while (precedence <= GetRule(_currentToken._type)->_precedence) {
             Advance();
@@ -132,30 +133,30 @@ namespace cclox {
         return &StaticParseRules[type];
     }
 
-    ASTRef Parser::Expression() {
+    ASTUniquePtr Parser::Expression() {
         return ParsePrecedence(PREC_ASSIGNMENT);
     }
 
-    ASTRef Parser::Number() {
+    ASTUniquePtr Parser::Number() {
         const char* str = _previousToken._start;
         cclox::Number value = std::strtod(str, nullptr);
-        ASTRef numberAst = std::make_unique<NumberExprAst>(_previousToken, NUMBER_VAL(value));
+        ASTUniquePtr numberAst = std::make_unique<NumberExprAst>(_previousToken, NUMBER_VAL(value));
         return std::move(numberAst);
     }
 
-    ASTRef Parser::Unary() {
-        ASTRef unaryAst = std::make_unique<UnaryExprAst>(_previousToken);
+    ASTUniquePtr Parser::Unary() {
+        ASTUniquePtr unaryAst = std::make_unique<UnaryExprAst>(_previousToken);
         unaryAst->_rhs = ParsePrecedence(PREC_UNARY);
         return unaryAst;
     }
 
-    ASTRef Parser::Group() {
-        ASTRef groupedAst = Expression();
+    ASTUniquePtr Parser::Group() {
+        ASTUniquePtr groupedAst = Expression();
         Consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression");
         return groupedAst;
     }
 
-    ASTRef Parser::Binary(ASTRef left) {
+    ASTUniquePtr Parser::Binary(ASTUniquePtr left) {
         auto binAst = std::make_unique<BinaryExprAst>(_previousToken);
         TokenType binOpType = _previousToken._type;
         ParseRule *rule = GetRule(binOpType);
@@ -165,7 +166,7 @@ namespace cclox {
         return binAst;
     }
 
-    ASTRef Parser::Literal() {
+    ASTUniquePtr Parser::Literal() {
         auto literalAst = std::make_unique<LiteralExprAst>(_previousToken);
         return literalAst;
     }
