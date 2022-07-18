@@ -13,6 +13,7 @@ namespace cclox {
     DEF_VALUE_T(VAL_BOOL) \
     DEF_VALUE_T(VAL_NIL) \
     DEF_VALUE_T(VAL_NUMBER) \
+    DEF_VALUE_T(VAL_OBJ) \
 
     typedef enum : uint8 {
 #define DEF_VALUE_T(VALUE_TYPE) VALUE_TYPE,
@@ -32,6 +33,7 @@ namespace cclox {
     }
 
     typedef double Number;
+    class Object;
 
     typedef struct Value {
         ValueType type;
@@ -39,19 +41,23 @@ namespace cclox {
         union {
             bool boolean;
             Number number;
+            Object* obj;
         } as;
     } Value;
 
 #define IS_BOOL(value)        ((value).type == cclox::VAL_BOOL)
 #define IS_NIL(value)         ((value).type == cclox::VAL_NIL)
 #define IS_NUMBER(value)      ((value).type == cclox::VAL_NUMBER)
+#define IS_OBJ(value)         ((value).type == cclox::VAL_OBJ)
 
 #define AS_BOOL(value)        ((value).as.boolean)
 #define AS_NUMBER(value)      ((value).as.number)
+#define AS_OBJ(value)         ((value).as.obj)
 
-#define BOOL_VAL(value)       ((cclox::Value){cclox::VAL_BOOL, {.boolean = (value)}})
-#define NIL_VAL(value)        ((cclox::Value){cclox::VAL_NIL, {.number = 0}})
-#define NUMBER_VAL(value)     ((cclox::Value){cclox::VAL_NUMBER, {.number = (value)}})
+#define BOOL_VAL(value)       ((cclox::Value){cclox::VAL_BOOL,     {.boolean = (value)}})
+#define NIL_VAL(value)        ((cclox::Value){cclox::VAL_NIL,      {.number = 0}})
+#define NUMBER_VAL(value)     ((cclox::Value){cclox::VAL_NUMBER,   {.number = (value)}})
+#define OBJ_VAL(value)        ((cclox::Value){cclox::VAL_OBJ,      {.obj = (value)}})
 
     inline Value VAL_VAL(Number number) {
         return NUMBER_VAL(number);
@@ -63,6 +69,10 @@ namespace cclox {
 
     inline Value VAL_VAL(std::nullptr_t nil) {
         return NIL_VAL(nil);
+    }
+
+    inline Value VAL_VAL(Object* obj) {
+        return OBJ_VAL(obj);
     }
 
     inline Value& VAL_VAL(Value& value) {
