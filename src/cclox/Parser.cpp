@@ -21,6 +21,7 @@ namespace cclox {
         PrefixParseFn lambdaUnary = [&parser]() { return parser->Unary(); };
         PrefixParseFn lambdaNumber = [&parser]() { return parser->Number(); };
         PrefixParseFn lambdaLiteral = [&parser]() { return parser->Literal(); };
+        PrefixParseFn lambdaString = [&parser]() { return parser->String(); };
 
         Parser::StaticParseRules[TOKEN_LEFT_PAREN]    = {lambdaGrouping, nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_RIGHT_PAREN]   = {nullptr,     nullptr,   PREC_NONE};
@@ -42,7 +43,7 @@ namespace cclox {
         Parser::StaticParseRules[TOKEN_LESS]          = {nullptr,     lambdaBinary,   PREC_COMPARISON};
         Parser::StaticParseRules[TOKEN_LESS_EQUAL]    = {nullptr,     lambdaBinary,   PREC_COMPARISON};
         Parser::StaticParseRules[TOKEN_IDENTIFIER]    = {nullptr,     nullptr,   PREC_NONE};
-        Parser::StaticParseRules[TOKEN_STRING]        = {nullptr,     nullptr,   PREC_NONE};
+        Parser::StaticParseRules[TOKEN_STRING]        = {lambdaString,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_NUMBER]        = {lambdaNumber,   nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_AND]           = {nullptr,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_CLASS]         = {nullptr,     nullptr,   PREC_NONE};
@@ -169,5 +170,10 @@ namespace cclox {
     ASTUniquePtr Parser::Literal() {
         auto literalAst = std::make_unique<LiteralExprAst>(_previousToken);
         return literalAst;
+    }
+
+    ASTUniquePtr Parser::String() {
+        ASTUniquePtr strAst = std::make_unique<StringExprAst>(_previousToken);
+        return std::move(strAst);
     }
 }

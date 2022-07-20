@@ -49,7 +49,6 @@ namespace cclox {
         static ParseRule StaticParseRules[TOKEN_MAXNUM];
         static ParseRule* GetRule(TokenType type);
 
-
         ASTUniquePtr ParsePrecedence(Precedence precedence);
     private:
         void ErrorAtCurrent(std::string_view message);
@@ -63,6 +62,7 @@ namespace cclox {
         ASTUniquePtr Group();
         ASTUniquePtr Binary(ASTUniquePtr left);
         ASTUniquePtr Literal();
+        ASTUniquePtr String();
 
         Token _currentToken;
         Token _previousToken;

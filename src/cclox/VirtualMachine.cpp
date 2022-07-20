@@ -3,6 +3,7 @@
 #include "Chunk.h"
 #include "Debug.h"
 #include "Compiler.h"
+#include "ObjString.h"
 
 namespace cclox {
     static VirtualMachine StaticVM;
@@ -112,8 +113,20 @@ namespace cclox {
         Value right = Pop();
         Value left = Pop();
         switch (binOperator) {
-            case OP_ADD:
-                return PushSpecific(left + right);
+            case OP_ADD: {
+                if (likely(IS_NUMBER(left) && IS_NUMBER(right)))
+                    return PushSpecific(left + right);
+                else {
+                    if (likely(IS_STRING(left) && IS_STRING(right))) {
+                        ObjString* newStr = Concatenate(AS_STRING(left), AS_STRING(right));
+                        PushSpecific(newStr);
+                    }
+                    else {
+                        // todo:
+                    }
+                }
+                break;
+            }
             case OP_SUBTRACT:
                 return PushSpecific(left - right);
             case OP_DIVIDE:

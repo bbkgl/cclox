@@ -8,6 +8,8 @@
 
 namespace cclox {
     class Chunk;
+    class Object;
+    class ObjString;
 
     class Ast {
     public:
@@ -50,6 +52,18 @@ namespace cclox {
         Number GetNumber();
     private:
         Number _number;
+    };
+
+    class StringExprAst : public ExprAst {
+    public:
+        explicit StringExprAst(Token token);
+
+        ~StringExprAst() override;
+
+        void CodeGen(Chunk* chunk) override;
+        ObjString* GetString();
+    private:
+        ObjString* _string;
     };
 
     class UnaryExprAst : public ExprAst {

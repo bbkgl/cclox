@@ -1,9 +1,12 @@
 #ifndef CCLOX_OBJECT_H
 #define CCLOX_OBJECT_H
-#include "Value.h"
+
+#include <string>
+#include "Common.h"
 
 namespace cclox {
 #define OBJ_T_TABLE() \
+    DEF_OBJ_T(OBJ_RAW) \
     DEF_OBJ_T(OBJ_STRING) \
 
     typedef enum : uint32 {
@@ -23,12 +26,16 @@ namespace cclox {
         return nullptr;
     }
 
-#define OBJ_TYPE(value)
+#define OBJ_TYPE(value) AS_OBJ(value)->GetType()
 
     class Object {
+    public:
+        virtual ObjType GetType() const;
 
+        virtual bool Equal(const Object* const other) const;
+
+        virtual std::string PrintObj() const;
     };
-
 }
 
 #endif //CCLOX_OBJECT_H

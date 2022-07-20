@@ -1,5 +1,6 @@
 #include <cstdio>
 #include "Value.h"
+#include "ObjString.h"
 
 namespace cclox{
     void PrintValue(Value value) {
@@ -14,6 +15,10 @@ namespace cclox{
             case VAL_BOOL:
                 printf("%s", AS_BOOL(value) ? "true" : "false");
                 break;
+            case VAL_OBJ: {
+                Object* obj = AS_OBJ(value);
+                printf("\"%s\"", obj->PrintObj().c_str());
+            }
         }
     }
 }

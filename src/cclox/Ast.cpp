@@ -1,5 +1,6 @@
 #include "Ast.h"
 #include "Chunk.h"
+#include "ObjString.h"
 
 namespace cclox {
     Ast::Ast(Token token)
@@ -142,5 +143,26 @@ namespace cclox {
     void ExprAst::EmitBytes(Chunk *chunk, uint8_t byte1, uint8 byte2) {
         chunk->WriteChunk(byte1, _token._line);
         chunk->WriteChunk(byte2, _token._line);
+    }
+
+    StringExprAst::StringExprAst(Token token)
+    : ExprAst(token)
+    {
+    }
+
+    StringExprAst::~StringExprAst() {
+
+    }
+
+    void StringExprAst::CodeGen(Chunk *chunk) {
+        EmitByte(chunk, OP_CONSTANT);
+        Object* obj = new ObjString(std::string_view(_token._start + 1, _token._length - 2));
+        auto index = chunk->AddConstant(OBJ_VAL(obj));
+        EmitByte(chunk, index);
+        _string = static_cast<ObjString*>(obj);
+    }
+
+    ObjString* StringExprAst::GetString() {
+        return _string;
     }
 }

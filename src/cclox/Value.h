@@ -4,6 +4,10 @@
 #include <vector>
 #include <cstring>
 #include "Common.h"
+#include "Object.h"
+
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
 
 namespace cclox {
     // constant define
@@ -33,7 +37,6 @@ namespace cclox {
     }
 
     typedef double Number;
-    class Object;
 
     typedef struct Value {
         ValueType type;
@@ -105,6 +108,8 @@ namespace cclox {
                 return AS_BOOL(a) == AS_BOOL(b);
             case VAL_NIL:
                 return true;
+            case VAL_OBJ:
+                return AS_OBJ(a)->Equal(AS_OBJ(b));
         }
         return false;
     }
