@@ -156,7 +156,7 @@ namespace cclox {
 
     void StringExprAst::CodeGen(Chunk *chunk) {
         EmitByte(chunk, OP_CONSTANT);
-        Object* obj = new ObjString(std::string_view(_token._start + 1, _token._length - 2));
+        Object* obj = ObjString::CreateString(std::string_view(_token._start + 1, _token._length - 2));
         auto index = chunk->AddConstant(OBJ_VAL(obj));
         EmitByte(chunk, index);
         _string = static_cast<ObjString*>(obj);

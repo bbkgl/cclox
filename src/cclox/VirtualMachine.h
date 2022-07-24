@@ -21,6 +21,7 @@ namespace cclox {
     class VirtualMachine {
     public:
         explicit VirtualMachine();
+        ~VirtualMachine();
 
         InterpretResult Interpret(std::unique_ptr<Chunk>&& chunk);
         InterpretResult Interpret(const std::string& source);

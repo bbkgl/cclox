@@ -1,3 +1,4 @@
+#include "GarbageCollect/GarbageCollector.h"
 #include "Common.h"
 #include "VirtualMachine.h"
 #include "Chunk.h"
@@ -118,7 +119,7 @@ namespace cclox {
                     return PushSpecific(left + right);
                 else {
                     if (likely(IS_STRING(left) && IS_STRING(right))) {
-                        ObjString* newStr = Concatenate(AS_STRING(left), AS_STRING(right));
+                        ObjString* newStr = ObjString::Concatenate(AS_STRING(left), AS_STRING(right));
                         PushSpecific(newStr);
                     }
                     else {
@@ -153,6 +154,7 @@ namespace cclox {
         auto compiledChunk = Compiler::Get().Compile(source);
         _currentChunk = std::move(compiledChunk);
         InterpretResult result = Interpret(std::move(_currentChunk));
+        GarbageCollector::Get().CollectGarbage();
         return result;
     }
 
@@ -161,6 +163,9 @@ namespace cclox {
         const auto& lines = _currentChunk->GetLines();
         uint32 line = lines[preInstructionLineIndex];
         fprintf(stderr, "[line %d] in script\n", line);
+    }
+
+    VirtualMachine::~VirtualMachine() {
     }
 }
 cclox::VirtualMachine *cclox::GlobalVM = &cclox::StaticVM;

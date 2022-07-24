@@ -30,11 +30,15 @@ namespace cclox {
 
     class Object {
     public:
-        virtual ObjType GetType() const;
+        explicit Object();
+        virtual ~Object();
 
-        virtual bool Equal(const Object* const other) const;
+        [[nodiscard]] virtual ObjType GetType() const;
 
-        virtual std::string PrintObj() const;
+        virtual bool Equal(const Object* other) const;
+
+        [[nodiscard]] virtual std::string PrintObj() const;
+    private:
     };
 }
 

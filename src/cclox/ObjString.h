@@ -2,6 +2,7 @@
 #define CCLOX_OBJSTRING_H
 
 #include <string>
+#include <unordered_map>
 #include "Object.h"
 
 namespace cclox {
@@ -11,20 +12,29 @@ namespace cclox {
 #define AS_CSTRING(value)    ((static_cast<ObjString*>AS_OBJ(value))->GetAnsiData())
 
     class ObjString : public Object {
+    private:
+        explicit ObjString(const std::string& fromStr);
     public:
-        explicit ObjString(std::string_view strView);
+        ~ObjString() override;
 
         [[nodiscard]] ObjType GetType() const override;
 
-        bool Equal(const Object *const other) const override;
+        bool Equal(const Object *other) const override;
         [[nodiscard]] const char* GetAnsiData() const;
-        const std::string& GetData() const;
+        [[nodiscard]] const std::string& GetData() const;
         [[nodiscard]] std::string PrintObj() const override;
+
+        // static method
+        static ObjString* Concatenate(ObjString* left, ObjString* right);
+        static ObjString* CreateString(std::string_view strView);
     protected:
-        std::string _data;
+        std::string_view _view;
+
+        // static properties
+        static std::unordered_map<std::string, ObjString*> _sObjStringTable;
+        static std::string _sEmpty;
     };
 
-    ObjString* Concatenate(ObjString* left, ObjString* right);
 }
 
 
