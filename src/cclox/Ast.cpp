@@ -18,6 +18,10 @@ namespace cclox {
 
     }
 
+    TokenType Ast::GetTokenType() {
+        return _token._type;
+    }
+
     LiteralExprAst::LiteralExprAst(Token token) : ExprAst(token) {
 
     }
@@ -164,5 +168,46 @@ namespace cclox {
 
     ObjString* StringExprAst::GetString() {
         return _string;
+    }
+
+    PrintStatementAst::PrintStatementAst(Token token)
+    : ExprAst(token)
+    {
+    }
+
+    void PrintStatementAst::CodeGen(Chunk *chunk)
+    {
+        EmitByte(chunk, OP_PRINT);
+    }
+
+    ExpressionStatementAst::ExpressionStatementAst(Token token)
+    : ExprAst(token) {
+
+    }
+
+    void ExpressionStatementAst::CodeGen(Chunk *chunk) {
+        EmitByte(chunk, OP_POP);
+    }
+
+    VarDeclarationAst::VarDeclarationAst(Token token, VarType varType)
+    : ExprAst(token)
+    , _varType(varType)
+    {
+
+    }
+
+    void VarDeclarationAst::CodeGen(Chunk *chunk) {
+        // Add variable to chunk table
+        std::string_view symbol = std::string_view(_token._start, _token._length);
+        auto globalIndex = cclox::Chunk::AddGlobal(symbol);
+
+        switch (_varType)
+        {
+            case GlobalVar: {
+                EmitBytes(chunk, OP_DEFINE_GLOBAL, globalIndex);
+            }
+            default:
+                return ;
+        }
     }
 }

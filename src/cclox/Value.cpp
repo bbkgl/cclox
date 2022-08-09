@@ -3,6 +3,10 @@
 #include "ObjString.h"
 
 namespace cclox{
+    void PrintValue(std::string_view global) {
+        printf("\"%s\"", global.data());
+    }
+
     void PrintValue(Value value) {
         switch (value.type)
         {

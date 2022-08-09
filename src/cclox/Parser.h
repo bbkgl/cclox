@@ -38,22 +38,36 @@ namespace cclox {
         explicit Parser(std::unique_ptr<Scanner> scanner);
 
         void Advance();
-        void Consume(TokenType expected, std::string_view message);
+        Token& Consume(TokenType expected, std::string_view message);
         static void RegisterRules(std::unique_ptr<Parser>& parser);
 
-        Token GetPreviousToken() const { return _previousToken; }
-        Token GetCurrentToken() const { return _currentToken; }
+        [[nodiscard]] Token GetPreviousToken() const { return _previousToken; }
+        [[nodiscard]] Token GetCurrentToken() const { return _currentToken; }
 
-        bool HadError() const { return _hadError; }
+        [[nodiscard]] bool HadError() const { return _hadError; }
 
         static ParseRule StaticParseRules[TOKEN_MAXNUM];
         static ParseRule* GetRule(TokenType type);
 
+        ASTUniquePtr Declaration();
+
         ASTUniquePtr ParsePrecedence(Precedence precedence);
+        bool Match(TokenType type);
     private:
         void ErrorAtCurrent(std::string_view message);
         void ErrorAtLast(std::string_view message);
         void ErrorAt(Token& token, std::string_view message);
+
+        // statement
+        ASTUniquePtr VarDeclaration();
+        ASTUniquePtr Statement();
+        ASTUniquePtr PrintStatement();
+        ASTUniquePtr ExpressionStatement();
+        void Synchronize();
+
+        // parse sth
+        ASTUniquePtr ParseVariable(std::string_view errorMsg);
+        static ASTUniquePtr IdentifierConstant(const Token& token);
 
         // infix && prefix function
         ASTUniquePtr Expression();
@@ -63,6 +77,11 @@ namespace cclox {
         ASTUniquePtr Binary(ASTUniquePtr left);
         ASTUniquePtr Literal();
         ASTUniquePtr String();
+
+
+
+        // check
+        [[nodiscard]] bool Check(TokenType type) const;
 
         Token _currentToken;
         Token _previousToken;

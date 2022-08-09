@@ -102,10 +102,10 @@ namespace cclox {
         _hadError = true;
     }
 
-    void Parser::Consume(TokenType expected, std::string_view message) {
+    Token& Parser::Consume(TokenType expected, std::string_view message) {
         if (expected == _currentToken._type) {
             Advance();
-            return ;
+            return _previousToken;
         }
         ErrorAtCurrent(message);
     }
@@ -134,10 +134,6 @@ namespace cclox {
         return &StaticParseRules[type];
     }
 
-    ASTUniquePtr Parser::Expression() {
-        return ParsePrecedence(PREC_ASSIGNMENT);
-    }
-
     ASTUniquePtr Parser::Number() {
         const char* str = _previousToken._start;
         cclox::Number value = std::strtod(str, nullptr);
@@ -155,6 +151,10 @@ namespace cclox {
         ASTUniquePtr groupedAst = Expression();
         Consume(TOKEN_RIGHT_PAREN, "Expect ')' after expression");
         return groupedAst;
+    }
+
+    ASTUniquePtr Parser::Expression() {
+        return ParsePrecedence(PREC_ASSIGNMENT);
     }
 
     ASTUniquePtr Parser::Binary(ASTUniquePtr left) {
@@ -175,5 +175,96 @@ namespace cclox {
     ASTUniquePtr Parser::String() {
         ASTUniquePtr strAst = std::make_unique<StringExprAst>(_previousToken);
         return std::move(strAst);
+    }
+
+    bool Parser::Check(TokenType type) const {
+        return _currentToken._type == type;
+    }
+
+    bool Parser::Match(TokenType type) {
+        if (!Check(type)) return false;
+        Advance();
+        return true;
+    }
+
+    ASTUniquePtr Parser::VarDeclaration() {
+        ASTUniquePtr varDeclAst = ParseVariable("Expect variable name.");
+
+        // default value: nil
+        if (Match(TOKEN_EQUAL))
+            varDeclAst->_rhs = Expression();
+//        else //
+//            varDeclAst->_rhs = std::make_unique<ExprAst>(TOKEN_NIL);
+
+        Consume(TOKEN_SEMICOLON, "Expect ';' after variable declaration.");
+        return varDeclAst;
+    }
+
+    ASTUniquePtr Parser::Statement() {
+        if (Match(TOKEN_PRINT))
+            return PrintStatement();
+        else
+            return ExpressionStatement();
+    }
+
+    ASTUniquePtr Parser::PrintStatement() {
+        ASTUniquePtr printAst = std::make_unique<PrintStatementAst>(_currentToken);
+        printAst->_rhs = Expression();
+        Consume(TOKEN_SEMICOLON, "Expect a ';' after print value");
+        return printAst;
+    }
+
+    ASTUniquePtr Parser::ExpressionStatement() {
+        auto exprAst = Expression();
+        Consume(TOKEN_SEMICOLON, "Expect a ';' after a statement");
+        ASTUniquePtr exprStatementAst = std::make_unique<ExpressionStatementAst>(_currentToken);
+        exprStatementAst->_rhs = std::move(exprAst);
+        return exprStatementAst;
+    }
+
+    ASTUniquePtr Parser::Declaration() {
+        ASTUniquePtr declAst = nullptr;
+        if (Match(TOKEN_VAR))
+            declAst = VarDeclaration();
+        else
+            declAst = Statement();
+        if (_panicMode)
+            Synchronize();
+        return declAst;
+    }
+
+    void Parser::Synchronize() {
+        _panicMode = false;
+
+        while (_currentToken._type != TOKEN_EOF)
+        {
+            if (_previousToken._type == TOKEN_SEMICOLON)
+                return ;
+            switch (_currentToken._type) {
+                case TOKEN_PRINT:
+                case TOKEN_CLASS:
+                case TOKEN_FUN:
+                case TOKEN_VAR:
+                case TOKEN_WHILE:
+                case TOKEN_IF:
+                case TOKEN_FOR:
+                case TOKEN_RETURN:
+                    return ;
+
+                default:
+                    // do nothing
+                    ;
+            }
+            Advance();
+        }
+    }
+
+    ASTUniquePtr Parser::ParseVariable(std::string_view errorMsg) {
+        Token& identifyToken = Consume(TOKEN_IDENTIFIER, errorMsg);
+        return IdentifierConstant(identifyToken);
+    }
+
+    ASTUniquePtr Parser::IdentifierConstant(const Token& token) {
+        return std::make_unique<VarDeclarationAst>(token, VarDeclarationAst::GlobalVar);
     }
 }

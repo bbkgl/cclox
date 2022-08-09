@@ -2,6 +2,8 @@
 
 namespace cclox
 {
+    Chunk::SymbolArray Chunk::_sGlobals;
+
     Chunk::Chunk()
     {
 
@@ -23,9 +25,14 @@ namespace cclox
         return _code.data();
     }
 
-    Chunk::Chunk(Chunk &&inChunk) {
+    Chunk::Chunk(Chunk &&inChunk) noexcept {
         _code = std::move(inChunk._code);
         _constants = std::move(inChunk._constants);
         _lines = std::move(inChunk._lines);
+    }
+
+    Chunk::ConstantIndex Chunk::AddGlobal(std::string_view symbol) {
+        _sGlobals.emplace_back(symbol);
+        return _sGlobals.size() - 1;
     }
 }

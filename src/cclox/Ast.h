@@ -13,13 +13,14 @@ namespace cclox {
 
     class Ast {
     public:
-        Ast(Token token);
+        explicit Ast(Token token);
         virtual ~Ast();
 
         std::unique_ptr<Ast> _lhs;
         std::unique_ptr<Ast> _rhs;
 
         virtual void CodeGen(Chunk* chunk);
+        [[nodiscard]] TokenType GetTokenType();
     protected:
         Token _token;
     };
@@ -81,6 +82,34 @@ namespace cclox {
         ~BinaryExprAst() override = default;
 
         void CodeGen(Chunk* chunk) override;
+    };
+
+    class PrintStatementAst : public ExprAst {
+    public:
+        explicit PrintStatementAst(Token token);
+
+        void CodeGen(Chunk* chunk) override;
+    };
+
+    class ExpressionStatementAst : public ExprAst {
+    public:
+        explicit ExpressionStatementAst(Token token);
+
+        void CodeGen(Chunk* chunk) override;
+    };
+
+    class VarDeclarationAst : public ExprAst {
+    public:
+        typedef enum : uint8 {
+            GlobalVar = 0,
+            ScopeVar = 1
+        } VarType;
+    public:
+        explicit VarDeclarationAst(Token token, VarType varType);
+
+        void CodeGen(Chunk* chunk) override;
+    private:
+        VarType _varType;
     };
 }
 

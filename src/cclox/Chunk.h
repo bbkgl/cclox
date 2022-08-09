@@ -9,29 +9,36 @@
 namespace cclox {
     class Chunk {
     public:
-        typedef std::vector<uint8>   CodeArray;
-        typedef std::vector<uint32>  LineArray;
-        typedef uint8                ConstantIndex;
+        typedef std::vector<uint8>            CodeArray;
+        typedef std::vector<uint32>           LineArray;
+        typedef std::vector<std::string>      SymbolArray;
+        typedef uint8                         ConstantIndex;
 
         explicit Chunk();
 
-        Chunk(Chunk&& inChunk);
+        Chunk(Chunk&& inChunk) noexcept ;
 
-        void WriteChunk(const uint8 byte, uint32 line);
+        void WriteChunk(uint8 byte, uint32 line);
 
 
         ConstantIndex AddConstant(Value value);
 
-        CodeArray GetChunkCodes() const {
+        static ConstantIndex AddGlobal(std::string_view symbol);
+
+        [[nodiscard]] CodeArray GetChunkCodes() const {
             return _code;
         }
 
-        ValueArray GetConstantValues() const {
+        [[nodiscard]] ValueArray GetConstantValues() const {
             return _constants;
         }
 
-        LineArray GetLines() const {
+        [[nodiscard]] LineArray GetLines() const {
             return _lines;
+        }
+
+        [[nodiscard]] static SymbolArray GetGlobals() {
+            return _sGlobals;
         }
     private:
         uint8* GetCodePointer();
@@ -40,6 +47,7 @@ namespace cclox {
         ValueArray   _constants;
         LineArray    _lines;
 
+        static SymbolArray _sGlobals;
         friend class VirtualMachine;
     };
 }

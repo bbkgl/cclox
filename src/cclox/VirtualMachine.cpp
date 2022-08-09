@@ -81,6 +81,20 @@ namespace cclox {
                 case OP_DIVIDE:
                     BinaryOperation(static_cast<OpCode>(instruction));
                     break;
+                case OP_PRINT: {
+                    PrintValue(Pop());
+                    printf("\n");
+                    break;
+                }
+                case OP_POP: {
+                    Pop();
+                    break;
+                }
+                case OP_DEFINE_GLOBAL: {
+                    std::string_view globalName = StepReadGlobal();
+                    _globals.emplace(globalName, Pop());
+                    break;
+                }
                 case OP_RETURN:
                     PrintValue(Pop());
                     printf("\n");
@@ -100,9 +114,19 @@ namespace cclox {
         return constant;
     }
 
+    std::string_view VirtualMachine::StepReadGlobal() {
+        Chunk::ConstantIndex globalIndex = Step();
+        std::string_view global = _currentChunk->_sGlobals[globalIndex];
+        return global;
+    }
+
     Value VirtualMachine::Pop() {
-        Value topValue = _valueStack.back();
-        _valueStack.pop_back();
+        Value topValue = {.type = ValueType::VAL_NIL};
+        if (!_valueStack.empty())
+        {
+            topValue = _valueStack.back();
+            _valueStack.pop_back();
+        }
         return topValue;
     }
 
@@ -165,7 +189,6 @@ namespace cclox {
         fprintf(stderr, "[line %d] in script\n", line);
     }
 
-    VirtualMachine::~VirtualMachine() {
-    }
+    VirtualMachine::~VirtualMachine() = default;
 }
 cclox::VirtualMachine *cclox::GlobalVM = &cclox::StaticVM;

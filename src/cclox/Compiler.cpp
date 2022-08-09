@@ -21,8 +21,11 @@ namespace cclox {
         _currentCompilingChunk = std::make_unique<Chunk>();
 
         _currentParser->Advance();
-        ASTUniquePtr ast = PerformParseAst();
-        CodeGen(ast);
+        while (!_currentParser->Match(TOKEN_EOF))
+        {
+            ASTUniquePtr ast = PerformParseAst();
+            CodeGen(ast);
+        }
 
         EndCompile();
 
@@ -45,11 +48,17 @@ namespace cclox {
     }
 
     ASTUniquePtr Compiler::PerformParseAst() {
-        return Expression();
+//        return Expression();
+        return Declaration();
     }
 
     ASTUniquePtr Compiler::Expression() {
         ASTUniquePtr expressionAst = _currentParser->ParsePrecedence(PREC_ASSIGNMENT);
+        return expressionAst;
+    }
+
+    ASTUniquePtr Compiler::Declaration() {
+        ASTUniquePtr expressionAst = _currentParser->Declaration();
         return expressionAst;
     }
 

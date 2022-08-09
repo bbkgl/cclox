@@ -14,8 +14,8 @@ namespace cclox {
     constexpr uint32 STACK_MAX = 256;
 
 #define VALUE_T_TABLE() \
-    DEF_VALUE_T(VAL_BOOL) \
     DEF_VALUE_T(VAL_NIL) \
+    DEF_VALUE_T(VAL_BOOL) \
     DEF_VALUE_T(VAL_NUMBER) \
     DEF_VALUE_T(VAL_OBJ) \
 
@@ -124,6 +124,7 @@ namespace cclox {
 
     typedef std::vector<Value> ValueArray;
 
+    void PrintValue(std::string_view value);
     void PrintValue(Value value);
 }
 

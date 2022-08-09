@@ -2,15 +2,23 @@
 #include "Value.h"
 
 namespace cclox {
-    static int SimpleInstruction(const char* name, int offset) {
-        printf("%s\n", name);
+    static size_t SimpleInstruction(std::string_view name, size_t offset) {
+        printf("%s\n", name.data());
         return offset + 1;
     }
 
-    static int ConstantInstruction(const char* name, int offset, const Chunk::CodeArray& code, const ValueArray& constants) {
+    static size_t ConstantInstruction(std::string_view name, size_t offset, const Chunk::CodeArray& code, const ValueArray& constants) {
         Chunk::ConstantIndex constantIndex = code[offset + 1];
-        printf("%-16s %4d '", name, constantIndex);
+        printf("%-16s %4d '", name.data(), constantIndex);
         PrintValue(constants[constantIndex]);
+        printf("'\n");
+        return offset + 2;
+    }
+
+    static size_t GlobalDefineInstruction(std::string_view name, size_t offset, const Chunk::CodeArray& code, const Chunk::SymbolArray & globals) {
+        Chunk::ConstantIndex globalIndex = code[offset + 1];
+        printf("%-16s %4d '", name.data(), globalIndex);
+        PrintValue(std::string_view(globals[globalIndex]));
         printf("'\n");
         return offset + 2;
     }
@@ -39,8 +47,10 @@ namespace cclox {
             printf("%4d ", lines[offset]);
 
         switch (instruction) {
+            case OP_DEFINE_GLOBAL:
+                return GlobalDefineInstruction(GetOpTypeStr(static_cast<OpCode>(instruction)), offset, code, Chunk::GetGlobals());
             case OP_CONSTANT:
-                return ConstantInstruction("OP_CONSTANT", offset, code, constants);
+                return ConstantInstruction(GetOpTypeStr(static_cast<OpCode>(instruction)), offset, code, constants);
             case OP_FALSE:
             case OP_TRUE:
             case OP_NIL:
@@ -54,6 +64,8 @@ namespace cclox {
             case OP_LESS:
             case OP_GREATER:
             case OP_DIVIDE:
+            case OP_PRINT:
+            case OP_POP:
                 return SimpleInstruction(GetOpTypeStr(static_cast<OpCode>(instruction)), offset);
             default:
                 printf("Unknown opcode %d\n", instruction);

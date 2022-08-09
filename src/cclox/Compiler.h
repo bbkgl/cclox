@@ -29,6 +29,7 @@ namespace cclox {
 
         ASTUniquePtr PerformParseAst();
         ASTUniquePtr Expression();
+        ASTUniquePtr Declaration();
 
         std::unique_ptr<Chunk> _currentCompilingChunk;
         std::unique_ptr<Parser> _currentParser;

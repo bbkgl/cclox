@@ -6,6 +6,7 @@
 #include <memory>
 #include <string_view>
 #include <vector>
+#include <unordered_map>
 #include "Value.h"
 #include "Utils.h"
 
@@ -38,6 +39,7 @@ namespace cclox {
         }
 
         Value StepReadConstant();
+        std::string_view StepReadGlobal();
 
         void BinaryOperation(OpCode binaryOperator);
 
@@ -67,6 +69,8 @@ namespace cclox {
 
         // stack
         ValueStack _valueStack;
+
+        std::unordered_map<std::string_view, Value> _globals;
     };
 
     extern VirtualMachine* GlobalVM;

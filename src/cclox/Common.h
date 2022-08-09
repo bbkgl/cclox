@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include <cassert>
+#include <string_view>
 
 #define RUNTIME_ASSERT(expr) assert(expr)
 #define STATIC_ASSERT(expr, msg) static_assert(expr, msg)
@@ -80,6 +81,7 @@ namespace cclox {
 
 #define OP_T_TABLE() \
     DEF_OP(OP_CONSTANT) \
+    DEF_OP(OP_DEFINE_GLOBAL) \
     DEF_OP(OP_NIL) \
     DEF_OP(OP_TRUE) \
     DEF_OP(OP_FALSE) \
@@ -93,6 +95,8 @@ namespace cclox {
     DEF_OP(OP_NOT) \
     DEF_OP(OP_NEGATE) \
     DEF_OP(OP_RETURN) \
+    DEF_OP(OP_PRINT) \
+    DEF_OP(OP_POP) \
 
     typedef enum OPType : uint8 {
 #define DEF_OP(OP_TYPE) OP_TYPE,
@@ -100,7 +104,7 @@ namespace cclox {
 #undef DEF_OP
     } OpCode;
 
-    inline const char* GetOpTypeStr(OpCode op)
+    inline std::string_view GetOpTypeStr(OpCode op)
     {
         switch (op) {
 #define DEF_OP(OP_TYPE) case OP_TYPE: \
@@ -108,7 +112,7 @@ namespace cclox {
             OP_T_TABLE()
 #undef DEF_OP
         }
-        return nullptr;
+        return "";
     }
 }
 
