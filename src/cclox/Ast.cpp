@@ -189,9 +189,14 @@ namespace cclox {
         EmitByte(chunk, OP_POP);
     }
 
-    VarDeclarationAst::VarDeclarationAst(Token token, VarType varType)
+    VarAst::VarAst(Token token, VarAst::VarType varType)
     : ExprAst(token)
-    , _varType(varType)
+    , _varType(varType) {
+
+    }
+
+    VarDeclarationAst::VarDeclarationAst(Token token, VarType varType)
+    : VarAst(token, varType)
     {
 
     }
@@ -199,12 +204,31 @@ namespace cclox {
     void VarDeclarationAst::CodeGen(Chunk *chunk) {
         // Add variable to chunk table
         std::string_view symbol = std::string_view(_token._start, _token._length);
-        auto globalIndex = cclox::Chunk::AddGlobal(symbol);
+        auto globalIndex = cclox::Chunk::FindOrAddGlobal(symbol);
 
         switch (_varType)
         {
             case GlobalVar: {
                 EmitBytes(chunk, OP_DEFINE_GLOBAL, globalIndex);
+            }
+            default:
+                return ;
+        }
+    }
+
+    VarAccessAst::VarAccessAst(Token token, VarType varType)
+    : VarAst(token, varType) {
+    }
+
+    void VarAccessAst::CodeGen(Chunk *chunk) {
+        // Add variable to chunk table
+        std::string_view symbol = std::string_view(_token._start, _token._length);
+        auto globalIndex = cclox::Chunk::FindOrAddGlobal(symbol);
+
+        switch (_varType)
+        {
+            case GlobalVar: {
+                EmitBytes(chunk, OP_GET_GLOBAL, globalIndex);
             }
             default:
                 return ;

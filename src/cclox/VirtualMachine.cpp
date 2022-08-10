@@ -95,6 +95,17 @@ namespace cclox {
                     _globals.emplace(globalName, Pop());
                     break;
                 }
+                case OP_GET_GLOBAL: {
+                    std::string_view globalName = StepReadGlobal();
+                    auto&& iter = _globals.find(globalName);
+                    if (iter == _globals.end())
+                    {
+                        RuntimeError("Undefined variable: %s", globalName.data());
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
+                    Push(iter->second);
+                    break;
+                }
                 case OP_RETURN:
                     PrintValue(Pop());
                     printf("\n");

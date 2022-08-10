@@ -67,10 +67,10 @@ namespace cclox {
 
         // parse sth
         ASTUniquePtr ParseVariable(std::string_view errorMsg);
-        static ASTUniquePtr IdentifierConstant(const Token& token);
 
         // infix && prefix function
         ASTUniquePtr Expression();
+        ASTUniquePtr Variable();
         ASTUniquePtr Number();
         ASTUniquePtr Unary();
         ASTUniquePtr Group();

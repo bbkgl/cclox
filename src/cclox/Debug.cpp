@@ -48,6 +48,7 @@ namespace cclox {
 
         switch (instruction) {
             case OP_DEFINE_GLOBAL:
+            case OP_GET_GLOBAL:
                 return GlobalDefineInstruction(GetOpTypeStr(static_cast<OpCode>(instruction)), offset, code, Chunk::GetGlobals());
             case OP_CONSTANT:
                 return ConstantInstruction(GetOpTypeStr(static_cast<OpCode>(instruction)), offset, code, constants);

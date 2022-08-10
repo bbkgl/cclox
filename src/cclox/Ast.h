@@ -98,18 +98,32 @@ namespace cclox {
         void CodeGen(Chunk* chunk) override;
     };
 
-    class VarDeclarationAst : public ExprAst {
+    class VarAst : public ExprAst {
     public:
         typedef enum : uint8 {
             GlobalVar = 0,
             ScopeVar = 1
         } VarType;
     public:
+        explicit VarAst(Token token, VarType varType);
+
+        void CodeGen(Chunk* chunk) override {};
+    protected:
+        VarType _varType;
+    };
+
+    class VarDeclarationAst : public VarAst {
+    public:
         explicit VarDeclarationAst(Token token, VarType varType);
 
         void CodeGen(Chunk* chunk) override;
-    private:
-        VarType _varType;
+    };
+
+    class VarAccessAst : public VarAst {
+    public:
+        explicit VarAccessAst(Token token, VarType varType);
+
+        void CodeGen(Chunk* chunk) override;
     };
 }
 

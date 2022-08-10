@@ -23,7 +23,7 @@ namespace cclox {
 
         ConstantIndex AddConstant(Value value);
 
-        static ConstantIndex AddGlobal(std::string_view symbol);
+        static ConstantIndex FindOrAddGlobal(std::string_view symbol);
 
         [[nodiscard]] CodeArray GetChunkCodes() const {
             return _code;

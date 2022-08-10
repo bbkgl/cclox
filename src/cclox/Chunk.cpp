@@ -31,7 +31,12 @@ namespace cclox
         _lines = std::move(inChunk._lines);
     }
 
-    Chunk::ConstantIndex Chunk::AddGlobal(std::string_view symbol) {
+    Chunk::ConstantIndex Chunk::FindOrAddGlobal(std::string_view symbol) {
+        for (ConstantIndex index = 0; index < _sGlobals.size(); index++)
+        {
+            if (_sGlobals[index] == symbol)
+                return index;
+        }
         _sGlobals.emplace_back(symbol);
         return _sGlobals.size() - 1;
     }

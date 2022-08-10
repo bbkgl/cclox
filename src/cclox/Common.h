@@ -82,6 +82,7 @@ namespace cclox {
 #define OP_T_TABLE() \
     DEF_OP(OP_CONSTANT) \
     DEF_OP(OP_DEFINE_GLOBAL) \
+    DEF_OP(OP_GET_GLOBAL) \
     DEF_OP(OP_NIL) \
     DEF_OP(OP_TRUE) \
     DEF_OP(OP_FALSE) \

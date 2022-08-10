@@ -22,6 +22,7 @@ namespace cclox {
         PrefixParseFn lambdaNumber = [&parser]() { return parser->Number(); };
         PrefixParseFn lambdaLiteral = [&parser]() { return parser->Literal(); };
         PrefixParseFn lambdaString = [&parser]() { return parser->String(); };
+        PrefixParseFn lambdaVariable = [&parser]() { return parser->Variable(); };
 
         Parser::StaticParseRules[TOKEN_LEFT_PAREN]    = {lambdaGrouping, nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_RIGHT_PAREN]   = {nullptr,     nullptr,   PREC_NONE};
@@ -42,7 +43,7 @@ namespace cclox {
         Parser::StaticParseRules[TOKEN_GREATER_EQUAL] = {nullptr,     lambdaBinary,   PREC_COMPARISON};
         Parser::StaticParseRules[TOKEN_LESS]          = {nullptr,     lambdaBinary,   PREC_COMPARISON};
         Parser::StaticParseRules[TOKEN_LESS_EQUAL]    = {nullptr,     lambdaBinary,   PREC_COMPARISON};
-        Parser::StaticParseRules[TOKEN_IDENTIFIER]    = {nullptr,     nullptr,   PREC_NONE};
+        Parser::StaticParseRules[TOKEN_IDENTIFIER]    = {lambdaVariable,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_STRING]        = {lambdaString,     nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_NUMBER]        = {lambdaNumber,   nullptr,   PREC_NONE};
         Parser::StaticParseRules[TOKEN_AND]           = {nullptr,     nullptr,   PREC_NONE};
@@ -208,7 +209,7 @@ namespace cclox {
     }
 
     ASTUniquePtr Parser::PrintStatement() {
-        ASTUniquePtr printAst = std::make_unique<PrintStatementAst>(_currentToken);
+        ASTUniquePtr printAst = std::make_unique<PrintStatementAst>(_previousToken);
         printAst->_rhs = Expression();
         Consume(TOKEN_SEMICOLON, "Expect a ';' after print value");
         return printAst;
@@ -261,10 +262,11 @@ namespace cclox {
 
     ASTUniquePtr Parser::ParseVariable(std::string_view errorMsg) {
         Token& identifyToken = Consume(TOKEN_IDENTIFIER, errorMsg);
-        return IdentifierConstant(identifyToken);
+        return std::make_unique<VarDeclarationAst>(identifyToken, VarDeclarationAst::GlobalVar);
     }
 
-    ASTUniquePtr Parser::IdentifierConstant(const Token& token) {
-        return std::make_unique<VarDeclarationAst>(token, VarDeclarationAst::GlobalVar);
+    ASTUniquePtr Parser::Variable() {
+        ASTUniquePtr varAccessAst = std::make_unique<VarAccessAst>(_previousToken, VarAst::GlobalVar);
+        return varAccessAst;
     }
 }
